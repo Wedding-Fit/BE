@@ -22,13 +22,7 @@ public class SecurityConfig {
                 .headers(h -> h.frameOptions(f -> f.sameOrigin())) // H2 콘솔용
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/h2-console/**",
-                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/actuator/**",
-                                "/auth/**"   // 회원가입/로그인 예정
-                        ).permitAll()
-                        .anyRequest().permitAll() // 개발 초반 오픈
+                        .anyRequest().permitAll() // 개발용: 모든 요청 허용
                 )
                 .formLogin(f -> f.disable())
                 .httpBasic(b -> b.disable());
