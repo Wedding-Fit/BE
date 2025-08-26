@@ -17,6 +17,13 @@ spring:
     console:
       enabled: true
   
+  # CORS 설정
+  web:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*" 
+      allowed-headers: "*"
+      allow-credentials: true
 
 server:
   port: 8080
