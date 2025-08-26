@@ -14,7 +14,9 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
@@ -52,7 +54,7 @@ public class GlobalExceptionHandler {
     // 500 - 내부 서버 오류
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        e.printStackTrace(); // 로그에 스택 트레이스 출력 (나중에 로깅 프레임워크로 변경)
+        log.error("서버 내부 오류 발생: {}", e.getMessage(), e);
         ErrorResponse response = ErrorResponse.of(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
