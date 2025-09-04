@@ -18,7 +18,13 @@ public enum GlobalErrorCode implements ErrorCode {
     
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(405, "G007", "지원하지 않는 HTTP 메소드입니다."),
-    
+
+    // 409 Conflict (회원가입/로그인 관련)
+    DUPLICATE_LOGIN_ID(409, "U001", "이미 사용 중인 아이디입니다."),
+    DUPLICATE_PHONE_NUMBER(409, "U002", "이미 사용 중인 전화번호입니다."),
+    DUPLICATE_NICKNAME(409, "U003", "이미 사용 중인 닉네임입니다."),
+    INVALID_CREDENTIALS(401, "U004", "아이디 또는 비밀번호가 올바르지 않습니다."),
+
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(500, "G008", "서버 내부 오류가 발생했습니다."),
     
