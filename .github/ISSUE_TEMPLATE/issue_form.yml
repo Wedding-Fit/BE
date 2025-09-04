@@ -1,7 +1,7 @@
-name: 'Feature Request'
+name: 'Issue form'
 description: '새로운 기능이나 작업 요청을 위한 이슈 템플릿'
 labels: [feat]
-title: '[FEAT] 이슈 이름을 작성해주세요'
+title: '[feat] 이슈 이름을 작성해주세요'
 body:
   - type: dropdown
     id: branchType
