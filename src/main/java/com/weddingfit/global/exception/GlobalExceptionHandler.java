@@ -8,10 +8,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.time.DateTimeException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -60,9 +60,16 @@ public class GlobalExceptionHandler {
     }
     
     // 사용자 정의 예외 처리 (나중에 추가 예정)
-    // @ExceptionHandler(CustomException.class)
-    // public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
-    //     ErrorResponse response = ErrorResponse.of(e.getErrorCode());
-    //     return new ResponseEntity<>(response, HttpStatus.valueOf(e.getErrorCode().getStatus()));
-    // }
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+        ErrorResponse response = ErrorResponse.of(e.getErrorCode());
+        return new ResponseEntity<>(response, HttpStatus.valueOf(e.getErrorCode().getStatus()));
+    }
+
+    // 지정한 포맷에 맞지 않는 입력이 들어왔을 때 발생
+    @ExceptionHandler(DateTimeException.class)
+    public ResponseEntity<ErrorResponse> handleDateTimeParseException(DateTimeException e){
+        ErrorResponse response = ErrorResponse.of(GlobalErrorCode.INVALID_INPUT_VALUE);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 }
