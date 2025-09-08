@@ -1,6 +1,8 @@
 package com.weddingfit.service.couple;
 
 import com.weddingfit.dto.request.couple.CoupleRegisterRequest;
+import com.weddingfit.dto.request.couple.CoupleUpdateRequest;
+import com.weddingfit.dto.response.couple.CoupleInfoResponse;
 import com.weddingfit.dto.response.couple.CoupleRegisterResponse;
 import com.weddingfit.entity.couple.Couple;
 import com.weddingfit.entity.user.User;
@@ -52,6 +54,61 @@ public class CoupleService {
         
         return CoupleRegisterResponse.builder()
                 .coupleId(savedCouple.getId())
+                .build();
+    }
+
+    @Transactional
+    public CoupleRegisterResponse updateCouple(CoupleUpdateRequest request, Long currentUserId) {
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.USER_NOT_FOUND));
+
+        Couple couple = coupleRepository.findByUserId(currentUserId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.COUPLE_NOT_FOUND));
+
+        Couple updatedCouple = Couple.builder()
+                .id(couple.getId())
+                .user1(couple.getUser1())
+                .user2(couple.getUser2())
+                .totalAmount(couple.getTotalAmount())
+                .region(request.getRegion())
+                .weddingType(request.getWeddingType())
+                .honeymoonBudget(request.getHoneymoonBudget())
+                .photoPackage(request.getPhotoPackage())
+                .dressMakeup(request.getDressMakeup())
+                .weddingDate(request.getWeddingDate())
+                .createdAt(couple.getCreatedAt())
+                .build();
+
+        Couple savedCouple = coupleRepository.save(updatedCouple);
+
+        return CoupleRegisterResponse.builder()
+                .coupleId(savedCouple.getId())
+                .build();
+    }
+
+    public CoupleInfoResponse getCoupleInfo(Long coupleId, Long currentUserId) {
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.USER_NOT_FOUND));
+
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.COUPLE_NOT_FOUND));
+
+        if (!couple.getUser1().getId().equals(currentUserId) && 
+            !couple.getUser2().getId().equals(currentUserId)) {
+            throw new CustomException(GlobalErrorCode.FORBIDDEN);
+        }
+
+        User partner = couple.getUser1().getId().equals(currentUserId) ? 
+                couple.getUser2() : couple.getUser1();
+
+        return CoupleInfoResponse.builder()
+                .loginId(partner.getLoginId())
+                .region(couple.getRegion())
+                .weddingType(couple.getWeddingType())
+                .honeymoonBudget(couple.getHoneymoonBudget())
+                .photoPackage(couple.getPhotoPackage())
+                .dressMakeup(couple.getDressMakeup())
+                .weddingDate(couple.getWeddingDate())
                 .build();
     }
 }
