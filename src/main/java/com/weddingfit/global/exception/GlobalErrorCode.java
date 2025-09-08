@@ -25,6 +25,11 @@ public enum GlobalErrorCode implements ErrorCode {
     DUPLICATE_PHONE_NUMBER(409, "U002", "이미 사용 중인 전화번호입니다."),
     DUPLICATE_NICKNAME(409, "U003", "이미 사용 중인 닉네임입니다."),
     INVALID_CREDENTIALS(401, "U004", "아이디 또는 비밀번호가 올바르지 않습니다."),
+    USER_NOT_FOUND(404, "U005", "사용자를 찾을 수 없습니다."),
+    
+    // 커플 등록 관련 에러
+    COUPLE_ALREADY_EXISTS(409, "C001", "이미 커플이 등록되어 있습니다."),
+    CANNOT_COUPLE_WITH_SELF(400, "C002", "본인과는 커플을 등록할 수 없습니다."),
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(500, "G008", "서버 내부 오류가 발생했습니다."),
