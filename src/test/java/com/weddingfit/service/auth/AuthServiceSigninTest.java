@@ -6,6 +6,7 @@ import com.weddingfit.entity.user.User;
 import com.weddingfit.global.exception.CustomException;
 import com.weddingfit.global.exception.GlobalErrorCode;
 import com.weddingfit.global.security.JwtProvider;
+import com.weddingfit.repository.user.RefreshTokenRepository;
 import com.weddingfit.repository.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class AuthServiceSigninTest {
     
     @Mock
     private JwtProvider jwtProvider;
+
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
     
     @InjectMocks
     private AuthService authService;
@@ -58,6 +62,8 @@ class AuthServiceSigninTest {
                 .willReturn(Optional.of(user));
         given(passwordEncoder.matches("1234", "encodedPassword"))
                 .willReturn(true);
+        org.mockito.Mockito.doNothing()
+                .when(refreshTokenRepository).deleteByUserId(1L);
         given(jwtProvider.createAccessToken(1L, "그린티", null))
                 .willReturn("jwt-access-token");
         
