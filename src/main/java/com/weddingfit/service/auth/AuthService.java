@@ -2,6 +2,7 @@ package com.weddingfit.service.auth;
 
 import com.weddingfit.dto.request.auth.RefreshTokenRequest;
 import com.weddingfit.dto.request.auth.SigninRequest;
+import com.weddingfit.dto.request.auth.SignoutRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
 import com.weddingfit.dto.response.auth.RefreshTokenResponse;
 import com.weddingfit.dto.response.auth.SigninResponse;
@@ -142,5 +143,22 @@ public class AuthService {
         return RefreshTokenResponse.builder()
                 .accessToken(newAccessToken)
                 .build();
+    }
+    
+    @Transactional
+    public void signout(SignoutRequest request) {
+        String refreshToken = request.getRefreshToken();
+        
+        // 토큰 유효성 검증
+        if (!jwtProvider.isTokenValid(refreshToken) || !jwtProvider.isRefreshToken(refreshToken)) {
+            throw new CustomException(GlobalErrorCode.LOGIN_REQUIRED);
+        }
+        
+        // DB에서 리프레시 토큰 삭제
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.LOGIN_REQUIRED));
+        
+        refreshTokenRepository.delete(tokenEntity);
+        log.info("User {} signed out successfully", jwtProvider.getUserId(refreshToken));
     }
 }
