@@ -20,6 +20,9 @@ public class SigninResponse {
     @Schema(description = "JWT 액세스 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
     private String accessToken;
 
+    @Schema(description = "JWT 리프레시 토큰", example = "eyJhbGciOiJIUzI1NiJ9...")
+    private String refreshToken;
+
     @Schema(description = "커플 ID", example = "1")
     private Long coupleId;
 }
