@@ -4,6 +4,7 @@ import com.weddingfit.dto.request.couple.CoupleRegisterRequest;
 import com.weddingfit.dto.request.couple.CoupleUpdateRequest;
 import com.weddingfit.dto.response.couple.CoupleInfoResponse;
 import com.weddingfit.dto.response.couple.CoupleRegisterResponse;
+import com.weddingfit.dto.response.user.CoupleNamesResponse;
 import com.weddingfit.entity.couple.Couple;
 import com.weddingfit.entity.user.User;
 import com.weddingfit.global.exception.CustomException;
@@ -108,6 +109,39 @@ public class CoupleService {
                 .honeymoonBudget(couple.getHoneymoonBudget())
                 .photoPackage(couple.getPhotoPackage())
                 .dressMakeup(couple.getDressMakeup())
+                .weddingDate(couple.getWeddingDate())
+                .build();
+    }
+
+    public CoupleNamesResponse getCoupleNames(Long coupleId, Long currentUserId) {
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.USER_NOT_FOUND));
+
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.COUPLE_NOT_FOUND));
+
+        if (!couple.getUser1().getId().equals(currentUserId) && 
+            !couple.getUser2().getId().equals(currentUserId)) {
+            throw new CustomException(GlobalErrorCode.FORBIDDEN);
+        }
+
+        User user1 = couple.getUser1();
+        User user2 = couple.getUser2();
+
+        String femaleName = null;
+        String maleName = null;
+
+        if (user1.getGender() == User.Gender.FEMALE) {
+            femaleName = user1.getName();
+            maleName = user2.getName();
+        } else {
+            femaleName = user2.getName();
+            maleName = user1.getName();
+        }
+
+        return CoupleNamesResponse.builder()
+                .femaleName(femaleName)
+                .maleName(maleName)
                 .weddingDate(couple.getWeddingDate())
                 .build();
     }
