@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,19 +33,15 @@ public class AuthController {
             summary = "회원가입",
             description = "신규 사용자를 등록합니다. 비밀번호는 암호화 저장되며, 아이디/닉네임/전화번호 중복 검증을 수행합니다."
     )
-    @ApiResponse(
-            responseCode = "201",
-            description = "회원가입 성공",
-            content = @Content(schema = @Schema(implementation = SignupResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "잘못된 입력값"
-    )
-    @ApiResponse(
-            responseCode = "409",
-            description = "중복된 아이디/닉네임/전화번호"
-    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "회원가입 성공",
+                    content = @Content(schema = @Schema(implementation = SignupResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 입력값"),
+            @ApiResponse(responseCode = "409", description = "중복된 아이디/닉네임/전화번호")
+    })
     public BaseResponse<SignupResponse> signup(@Valid @RequestBody SignupRequest request){
         SignupResponse response = authService.signup(request);
         return BaseResponse.success(response, "회원가입이 완료 되었습니다.");
@@ -55,15 +52,14 @@ public class AuthController {
             summary = "로그인",
             description = "사용자 로그인을 수행합니다. 성공시 JWT 액세스 토큰을 반환합니다."
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그인 성공",
-            content = @Content(schema = @Schema(implementation = SigninResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "아이디 또는 비밀번호가 올바르지 않습니다"
-    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "로그인 성공",
+                    content = @Content(schema = @Schema(implementation = SigninResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호가 올바르지 않습니다")
+    })
     public BaseResponse<SigninResponse> signin(@Valid @RequestBody SigninRequest request) {
         SigninResponse response = authService.signin(request);
         return BaseResponse.success(response, "성공했습니다");
@@ -74,15 +70,14 @@ public class AuthController {
             summary = "토큰 재발급",
             description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다."
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "토큰 재발급 성공",
-            content = @Content(schema = @Schema(implementation = RefreshTokenResponse.class))
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "로그인이 필요한 서비스입니다"
-    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "토큰 재발급 성공",
+                    content = @Content(schema = @Schema(implementation = RefreshTokenResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요한 서비스입니다")
+    })
     public BaseResponse<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         RefreshTokenResponse response = authService.refreshAccessToken(request);
         return BaseResponse.success(response, "OK");
@@ -93,14 +88,10 @@ public class AuthController {
             summary = "로그아웃",
             description = "사용자 로그아웃을 수행합니다. 리프레시 토큰을 무효화합니다."
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그아웃 성공"
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "로그인이 필요한 서비스입니다"
-    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요한 서비스입니다")
+    })
     public BaseResponse<Void> signout(@Valid @RequestBody SignoutRequest request) {
         authService.signout(request);
         return BaseResponse.success(null, "로그아웃되었습니다");
