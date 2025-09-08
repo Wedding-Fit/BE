@@ -2,6 +2,7 @@ package com.weddingfit.controller.auth;
 
 import com.weddingfit.dto.request.auth.RefreshTokenRequest;
 import com.weddingfit.dto.request.auth.SigninRequest;
+import com.weddingfit.dto.request.auth.SignoutRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
 import com.weddingfit.dto.response.auth.RefreshTokenResponse;
 import com.weddingfit.dto.response.auth.SigninResponse;
@@ -85,5 +86,23 @@ public class AuthController {
     public BaseResponse<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         RefreshTokenResponse response = authService.refreshAccessToken(request);
         return BaseResponse.success(response, "OK");
+    }
+
+    @PostMapping("/signout")
+    @Operation(
+            summary = "로그아웃",
+            description = "사용자 로그아웃을 수행합니다. 리프레시 토큰을 무효화합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그아웃 성공"
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "로그인이 필요한 서비스입니다"
+    )
+    public BaseResponse<Void> signout(@Valid @RequestBody SignoutRequest request) {
+        authService.signout(request);
+        return BaseResponse.success(null, "로그아웃되었습니다");
     }
 }
