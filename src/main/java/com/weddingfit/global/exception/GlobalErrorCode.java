@@ -9,6 +9,7 @@ public enum GlobalErrorCode implements ErrorCode {
     // 401 Unauthorized
     UNAUTHORIZED(401, "G003", "인증이 필요합니다."),
     INVALID_TOKEN(401, "G004", "유효하지 않은 토큰입니다."),
+    LOGIN_REQUIRED(401, "J-005", "로그인이 필요한 서비스입니다."),
     
     // 403 Forbidden
     FORBIDDEN(403, "G005", "접근 권한이 없습니다."),
