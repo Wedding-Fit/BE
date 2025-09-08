@@ -30,6 +30,7 @@ public enum GlobalErrorCode implements ErrorCode {
     // 커플 등록 관련 에러
     COUPLE_ALREADY_EXISTS(409, "C001", "이미 커플이 등록되어 있습니다."),
     CANNOT_COUPLE_WITH_SELF(400, "C002", "본인과는 커플을 등록할 수 없습니다."),
+    COUPLE_NOT_FOUND(404, "C003", "커플 정보를 찾을 수 없습니다."),
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(500, "G008", "서버 내부 오류가 발생했습니다."),
