@@ -23,6 +23,9 @@ public class JwtProvider {
     @Value("${jwt.access-token-expire-time}")
     private long accessTokenExpireTime;
     
+    @Value("${jwt.refresh-token-expire-time}")
+    private long refreshTokenExpireTime;
+    
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
@@ -48,7 +51,7 @@ public class JwtProvider {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-    
+
     public boolean isTokenValid(String token) {
         try {
             getClaims(token);
@@ -69,5 +72,27 @@ public class JwtProvider {
     
     public Long getCoupleId(String token) {
         return getClaims(token).get("coupleId", Long.class);
+    }
+    
+    public String createRefreshToken(Long userId) {
+        Instant now = Instant.now();
+        Instant expiration = now.plus(refreshTokenExpireTime, ChronoUnit.MILLIS);
+        
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("type", "refresh")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+    
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return "refresh".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
