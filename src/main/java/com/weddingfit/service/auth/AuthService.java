@@ -1,28 +1,37 @@
 package com.weddingfit.service.auth;
 
+import com.weddingfit.dto.request.auth.RefreshTokenRequest;
 import com.weddingfit.dto.request.auth.SigninRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
+import com.weddingfit.dto.response.auth.RefreshTokenResponse;
 import com.weddingfit.dto.response.auth.SigninResponse;
 import com.weddingfit.dto.response.auth.SignupResponse;
+import com.weddingfit.entity.user.RefreshToken;
 import com.weddingfit.entity.user.User;
 import com.weddingfit.global.exception.CustomException;
 import com.weddingfit.global.exception.GlobalErrorCode;
 import com.weddingfit.global.security.JwtProvider;
+import com.weddingfit.repository.user.RefreshTokenRepository;
 import com.weddingfit.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public SignupResponse signup(SignupRequest request){
@@ -64,7 +73,7 @@ public class AuthService {
                 .createdAt(savedUser.getCreatedAt())
                 .build();
     }
-    @Transactional(readOnly = true)
+    @Transactional
     public SigninResponse signin(SigninRequest request){
         User user = userRepository.findByLoginIdAndIsActiveTrue(request.getLoginId())
                 .orElseThrow(() -> new CustomException(GlobalErrorCode.INVALID_CREDENTIALS));
@@ -78,12 +87,60 @@ public class AuthService {
                 user.getNickname(),
                 null
         );
-        // data 섹션에 들어갈 DTO 반환
+        
+        // 기존 리프레시 토큰 삭제 후 새로 생성
+        refreshTokenRepository.deleteByUserId(user.getId());
+        String refreshToken = jwtProvider.createRefreshToken(user.getId());
+        
+        RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .token(refreshToken)
+                .userId(user.getId())
+                .expiresAt(LocalDateTime.now().plus(7, ChronoUnit.DAYS))
+                .build();
+        refreshTokenRepository.save(refreshTokenEntity);
+        
         return SigninResponse.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
-                .coupleId(null) // 필드 있으면 세팅
+                .refreshToken(refreshToken)
+                .coupleId(null)
+                .build();
+    }
+    
+    @Transactional
+    public RefreshTokenResponse refreshAccessToken(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+        
+        // 토큰 유효성 검증
+        if (!jwtProvider.isTokenValid(refreshToken) || !jwtProvider.isRefreshToken(refreshToken)) {
+            throw new CustomException(GlobalErrorCode.LOGIN_REQUIRED);
+        }
+        
+        // DB에서 리프레시 토큰 조회
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.LOGIN_REQUIRED));
+        
+        // 토큰 만료 확인
+        if (tokenEntity.isExpired()) {
+            refreshTokenRepository.delete(tokenEntity);
+            throw new CustomException(GlobalErrorCode.LOGIN_REQUIRED);
+        }
+        
+        // 사용자 정보 조회
+        Long userId = jwtProvider.getUserId(refreshToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.LOGIN_REQUIRED));
+        
+        // 새로운 액세스 토큰 생성
+        String newAccessToken = jwtProvider.createAccessToken(
+                user.getId(),
+                user.getNickname(),
+                null
+        );
+        
+        return RefreshTokenResponse.builder()
+                .accessToken(newAccessToken)
                 .build();
     }
 }
