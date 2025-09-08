@@ -1,6 +1,8 @@
 package com.weddingfit.service.couple;
 
 import com.weddingfit.dto.request.couple.CoupleRegisterRequest;
+import com.weddingfit.dto.request.couple.CoupleUpdateRequest;
+import com.weddingfit.dto.response.couple.CoupleInfoResponse;
 import com.weddingfit.dto.response.couple.CoupleRegisterResponse;
 import com.weddingfit.entity.couple.Couple;
 import com.weddingfit.entity.user.User;
@@ -262,5 +264,178 @@ class CoupleServiceTest {
         assertThatThrownBy(() -> coupleService.registerCouple(request, currentUserId))
                 .isInstanceOf(CustomException.class)
                 .hasFieldOrPropertyWithValue("errorCode", GlobalErrorCode.COUPLE_ALREADY_EXISTS);
+    }
+
+    @Test
+    @DisplayName("커플 정보 수정 성공")
+    void updateCouple_success() {
+        // Given
+        Long currentUserId = 1L;
+        CoupleUpdateRequest request = new CoupleUpdateRequest(
+                "부산광역시",
+                "빌라 웨딩",
+                false,
+                true,
+                false,
+                LocalDate.of(2025, 12, 25)
+        );
+
+        User currentUser = User.builder()
+                .id(1L)
+                .loginId("user123")
+                .nickname("현재사용자")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User partner = User.builder()
+                .id(2L)
+                .loginId("partner123")
+                .nickname("파트너")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Couple existingCouple = Couple.builder()
+                .id(1L)
+                .user1(currentUser)
+                .user2(partner)
+                .region("서울특별시")
+                .weddingType("스몰 웨딩")
+                .honeymoonBudget(true)
+                .photoPackage(false)
+                .dressMakeup(true)
+                .weddingDate(LocalDate.of(2025, 8, 30))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Couple savedCouple = Couple.builder()
+                .id(1L)
+                .user1(currentUser)
+                .user2(partner)
+                .region("부산광역시")
+                .weddingType("빌라 웨딩")
+                .honeymoonBudget(false)
+                .photoPackage(true)
+                .dressMakeup(false)
+                .weddingDate(LocalDate.of(2025, 12, 25))
+                .createdAt(existingCouple.getCreatedAt())
+                .build();
+
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentUser));
+        given(coupleRepository.findByUserId(currentUserId)).willReturn(Optional.of(existingCouple));
+        given(coupleRepository.save(any(Couple.class))).willReturn(savedCouple);
+
+        // When
+        CoupleRegisterResponse response = coupleService.updateCouple(request, currentUserId);
+
+        // Then
+        assertThat(response.getCoupleId()).isEqualTo(1L);
+        verify(coupleRepository).save(any(Couple.class));
+    }
+
+    @Test
+    @DisplayName("커플 정보 조회 성공")
+    void getCoupleInfo_success() {
+        // Given
+        Long currentUserId = 1L;
+        Long coupleId = 1L;
+
+        User currentUser = User.builder()
+                .id(1L)
+                .loginId("user123")
+                .nickname("현재사용자")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User partner = User.builder()
+                .id(2L)
+                .loginId("partner123")
+                .nickname("파트너")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Couple couple = Couple.builder()
+                .id(1L)
+                .user1(currentUser)
+                .user2(partner)
+                .region("서울특별시")
+                .weddingType("스몰 웨딩")
+                .honeymoonBudget(true)
+                .photoPackage(false)
+                .dressMakeup(true)
+                .weddingDate(LocalDate.of(2025, 8, 30))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentUser));
+        given(coupleRepository.findById(coupleId)).willReturn(Optional.of(couple));
+
+        // When
+        CoupleInfoResponse response = coupleService.getCoupleInfo(coupleId, currentUserId);
+
+        // Then
+        assertThat(response.getLoginId()).isEqualTo("partner123");
+        assertThat(response.getRegion()).isEqualTo("서울특별시");
+        assertThat(response.getWeddingType()).isEqualTo("스몰 웨딩");
+        assertThat(response.getHoneymoonBudget()).isTrue();
+        assertThat(response.getPhotoPackage()).isFalse();
+        assertThat(response.getDressMakeup()).isTrue();
+        assertThat(response.getWeddingDate()).isEqualTo(LocalDate.of(2025, 8, 30));
+    }
+
+    @Test
+    @DisplayName("권한 없는 사용자가 커플 정보 조회 시 실패")
+    void getCoupleInfo_fail_forbidden() {
+        // Given
+        Long currentUserId = 3L; // 커플에 속하지 않는 사용자
+        Long coupleId = 1L;
+
+        User currentUser = User.builder()
+                .id(3L)
+                .loginId("outsider123")
+                .nickname("외부사용자")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User user1 = User.builder()
+                .id(1L)
+                .loginId("user123")
+                .nickname("사용자1")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .loginId("partner123")
+                .nickname("사용자2")
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Couple couple = Couple.builder()
+                .id(1L)
+                .user1(user1)
+                .user2(user2)
+                .region("서울특별시")
+                .weddingType("스몰 웨딩")
+                .honeymoonBudget(true)
+                .photoPackage(false)
+                .dressMakeup(true)
+                .weddingDate(LocalDate.of(2025, 8, 30))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentUser));
+        given(coupleRepository.findById(coupleId)).willReturn(Optional.of(couple));
+
+        // When & Then
+        assertThatThrownBy(() -> coupleService.getCoupleInfo(coupleId, currentUserId))
+                .isInstanceOf(CustomException.class)
+                .hasFieldOrPropertyWithValue("errorCode", GlobalErrorCode.FORBIDDEN);
     }
 }
