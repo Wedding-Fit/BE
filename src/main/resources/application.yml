@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: be
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/weddingfit
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 003816
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+
+  # CORS 설정
+  web:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true
+
+server:
+  port: 8081
+  error:
+    whitelabel:
+      enabled: false

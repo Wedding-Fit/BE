@@ -1,6 +1,11 @@
 package com.weddingfit.controller.auth;
 
+import com.weddingfit.dto.request.auth.RefreshTokenRequest;
+import com.weddingfit.dto.request.auth.SigninRequest;
+import com.weddingfit.dto.request.auth.SignoutRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
+import com.weddingfit.dto.response.auth.RefreshTokenResponse;
+import com.weddingfit.dto.response.auth.SigninResponse;
 import com.weddingfit.dto.response.auth.SignupResponse;
 import com.weddingfit.global.response.BaseResponse;
 import com.weddingfit.service.auth.AuthService;
@@ -43,5 +48,61 @@ public class AuthController {
     public BaseResponse<SignupResponse> signup(@Valid @RequestBody SignupRequest request){
         SignupResponse response = authService.signup(request);
         return BaseResponse.success(response, "회원가입이 완료 되었습니다.");
+    }
+
+    @PostMapping("/signin")
+    @Operation(
+            summary = "로그인",
+            description = "사용자 로그인을 수행합니다. 성공시 JWT 액세스 토큰을 반환합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그인 성공",
+            content = @Content(schema = @Schema(implementation = SigninResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "아이디 또는 비밀번호가 올바르지 않습니다"
+    )
+    public BaseResponse<SigninResponse> signin(@Valid @RequestBody SigninRequest request) {
+        SigninResponse response = authService.signin(request);
+        return BaseResponse.success(response, "성공했습니다");
+    }
+
+    @PostMapping("/refresh")
+    @Operation(
+            summary = "토큰 재발급",
+            description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "토큰 재발급 성공",
+            content = @Content(schema = @Schema(implementation = RefreshTokenResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "로그인이 필요한 서비스입니다"
+    )
+    public BaseResponse<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        RefreshTokenResponse response = authService.refreshAccessToken(request);
+        return BaseResponse.success(response, "OK");
+    }
+
+    @PostMapping("/signout")
+    @Operation(
+            summary = "로그아웃",
+            description = "사용자 로그아웃을 수행합니다. 리프레시 토큰을 무효화합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그아웃 성공"
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "로그인이 필요한 서비스입니다"
+    )
+    public BaseResponse<Void> signout(@Valid @RequestBody SignoutRequest request) {
+        authService.signout(request);
+        return BaseResponse.success(null, "로그아웃되었습니다");
     }
 }

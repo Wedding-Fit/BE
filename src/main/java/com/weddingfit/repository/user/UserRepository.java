@@ -10,4 +10,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByLoginId(String loginId); // 회원가입시 중복 검사용
     boolean existsByPhoneNumber(String phoneNumber);
     boolean existsByNickname(String nickname);
+    Optional<User> findByLoginIdAndIsActiveTrue(String loginId); // 활성화된 유저만 조회
 }
