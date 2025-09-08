@@ -1,6 +1,8 @@
 package com.weddingfit.controller.auth;
 
+import com.weddingfit.dto.request.auth.SigninRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
+import com.weddingfit.dto.response.auth.SigninResponse;
 import com.weddingfit.dto.response.auth.SignupResponse;
 import com.weddingfit.global.response.BaseResponse;
 import com.weddingfit.service.auth.AuthService;
@@ -44,4 +46,25 @@ public class AuthController {
         SignupResponse response = authService.signup(request);
         return BaseResponse.success(response, "회원가입이 완료 되었습니다.");
     }
+
+    @PostMapping("/signin")
+    @Operation(
+            summary = "로그인",
+            description = "사용자 로그인을 수행합니다. 성공시 JWT 액세스 토큰을 반환합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그인 성공",
+            content = @Content(schema = @Schema(implementation = SigninResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "아이디 또는 비밀번호가 올바르지 않습니다"
+    )
+    public BaseResponse<SigninResponse> signin(@Valid @RequestBody SigninRequest request) {
+        SigninResponse response = authService.signin(request);
+        return BaseResponse.success(response, "성공했습니다");
+    }
+
+
 }
