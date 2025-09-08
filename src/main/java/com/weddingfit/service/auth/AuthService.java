@@ -1,10 +1,13 @@
 package com.weddingfit.service.auth;
 
+import com.weddingfit.dto.request.auth.SigninRequest;
 import com.weddingfit.dto.request.auth.SignupRequest;
+import com.weddingfit.dto.response.auth.SigninResponse;
 import com.weddingfit.dto.response.auth.SignupResponse;
 import com.weddingfit.entity.user.User;
 import com.weddingfit.global.exception.CustomException;
 import com.weddingfit.global.exception.GlobalErrorCode;
+import com.weddingfit.global.security.JwtProvider;
 import com.weddingfit.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     @Transactional
     public SignupResponse signup(SignupRequest request){
@@ -58,6 +62,28 @@ public class AuthService {
                 .name(savedUser.getName())
                 .nickname(savedUser.getNickname())
                 .createdAt(savedUser.getCreatedAt())
+                .build();
+    }
+    @Transactional(readOnly = true)
+    public SigninResponse signin(SigninRequest request){
+        User user = userRepository.findByLoginIdAndIsActiveTrue(request.getLoginId())
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.INVALID_CREDENTIALS));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new CustomException(GlobalErrorCode.INVALID_CREDENTIALS);
+        }
+
+        String accessToken = jwtProvider.createAccessToken(
+                user.getId(),
+                user.getNickname(),
+                null
+        );
+        // data 섹션에 들어갈 DTO 반환
+        return SigninResponse.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .accessToken(accessToken)
+                .coupleId(null) // 필드 있으면 세팅
                 .build();
     }
 }
