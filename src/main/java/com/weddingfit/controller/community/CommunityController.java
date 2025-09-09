@@ -24,8 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/community", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -99,8 +97,8 @@ public class CommunityController {
                 return ResponseEntity.status(400)
                         .body(BaseResponse.error("유효하지 않은 카테고리입니다", "INVALID_CATEGORY"));
             }
-            List<Community> posts = communityService.getPostsByCategory(category);
-            PostlistResponse.Data data = PostlistResponse.Data.fromEntities(posts);
+
+            PostlistResponse.Data data = communityService.getPostListDataByCategory(category);
 
             return ResponseEntity.ok(BaseResponse.success(data, "성공했습니다"));
         } catch (Exception e) {
@@ -129,7 +127,6 @@ public class CommunityController {
     ) {
         try {
             Long currentUserId = extractUserId(request);
-
             PostdetailResponse detail = communityService.getPostDetail(postId, currentUserId);
             return ResponseEntity.ok(BaseResponse.success(detail, "성공했습니다"));
         } catch (IllegalArgumentException e) {
@@ -172,6 +169,7 @@ public class CommunityController {
                     .body(BaseResponse.error("서버 오류가 발생했습니다", "SERVER_ERROR"));
         }
     }
+
 
     private Long extractUserId(HttpServletRequest request) {
         String token = extractBearerToken(request);
@@ -216,7 +214,7 @@ public class CommunityController {
         return switch (korean.trim()) {
             case "결혼" -> Community.Category.WEDDING;
             case "저축" -> Community.Category.SAVING;
-            case "주거" -> Community.Category.HOUSING;
+            case "주거", "주택" -> Community.Category.HOUSING;
             case "세금" -> Community.Category.TAX;
             case "중고" -> Community.Category.USED;
             case "팁"   -> Community.Category.TIPS;

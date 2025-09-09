@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
@@ -22,6 +23,14 @@ public class PostlistResponse {
         public static Data fromEntities(List<Community> posts) {
             return Data.builder()
                     .boardList(posts.stream().map(Board::fromEntity).collect(toList()))
+                    .build();
+        }
+
+        public static Data fromEntitiesWithLikes(List<Community> posts, Map<Long, Long> likeCountMap) {
+            return Data.builder()
+                    .boardList(posts.stream()
+                            .map(p -> Board.fromEntityWithLike(p, likeCountMap.getOrDefault(p.getId(), 0L)))
+                            .collect(toList()))
                     .build();
         }
     }
@@ -56,6 +65,18 @@ public class PostlistResponse {
                     .category(toKoreanCategory(post.getCategory()))
                     .content(post.getContent())
                     .likeCount(Objects.requireNonNullElse(post.getLikeCount(), 0))
+                    .createdAt(post.getCreatedAt() != null ? post.getCreatedAt().format(DATE_FMT) : null)
+                    .build();
+        }
+
+        public static Board fromEntityWithLike(Community post, long likeCount) {
+            return Board.builder()
+                    .postId(post.getId())
+                    .title(post.getTitle())
+                    .nickname(resolveNickname(post))
+                    .category(toKoreanCategory(post.getCategory()))
+                    .content(post.getContent())
+                    .likeCount((int) likeCount)
                     .createdAt(post.getCreatedAt() != null ? post.getCreatedAt().format(DATE_FMT) : null)
                     .build();
         }

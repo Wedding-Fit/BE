@@ -3,6 +3,7 @@ package com.weddingfit.service.community;
 import com.weddingfit.dto.request.community.PostlistRequest;
 import com.weddingfit.dto.request.community.PostwriteRequest;
 import com.weddingfit.dto.response.community.PostdetailResponse;
+import com.weddingfit.dto.response.community.PostlistResponse;
 import com.weddingfit.dto.response.community.PostwriteResponse;
 import com.weddingfit.entity.community.Community;
 import com.weddingfit.entity.user.User;
@@ -15,9 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.*;
 import java.util.Locale;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +64,22 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
+    public PostlistResponse.Data getPostListDataByCategory(PostlistRequest.Category category) {
+        List<Community> posts = getPostsByCategory(category);
+        if (posts.isEmpty()) {
+            return PostlistResponse.Data.fromEntitiesWithLikes(Collections.emptyList(), Collections.emptyMap());
+        }
+
+        Map<Long, Long> likeMap = new HashMap<>();
+        for (Community p : posts) {
+            long cnt = communityLikeRepository.countByCommunity_Id(p.getId());
+            likeMap.put(p.getId(), cnt);
+        }
+
+        return PostlistResponse.Data.fromEntitiesWithLikes(posts, likeMap);
+    }
+
+    @Transactional(readOnly = true)
     public PostdetailResponse getPostDetail(Long postId, Long currentUserId) {
         Community post = communityRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -91,7 +107,6 @@ public class CommunityService {
         );
     }
 
-
     @Transactional
     public void deletePost(Long postId, Long userId) {
         if (userId == null) throw new IllegalArgumentException("사용자 ID가 필요합니다.");
@@ -112,7 +127,6 @@ public class CommunityService {
 
         communityRepository.delete(post);
     }
-
 
     private Community.Category mapCategory(String raw) {
         if (raw == null || raw.isBlank()) {
