@@ -1,4 +1,4 @@
-package com.weddingfit.global.security;
+package com.weddingfit.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
