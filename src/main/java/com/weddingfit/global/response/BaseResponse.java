@@ -5,43 +5,43 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseResponse<T> {
     
-    private boolean success;
-    private String message;
+    private int code;
     private T data;
+    private String message;
     private String errorCode;
     
-    private BaseResponse(boolean success, String message, T data, String errorCode) {
-        this.success = success;
-        this.message = message;
+    private BaseResponse(int code, T data, String message, String errorCode) {
+        this.code = code;
         this.data = data;
+        this.message = message;
         this.errorCode = errorCode;
     }
     
     // 성공 응답
     public static <T> BaseResponse<T> success(T data) {
-        return new BaseResponse<>(true, "요청이 성공했습니다.", data, null);
+        return new BaseResponse<>(200, data, "성공했습니다", null);
     }
     
     public static <T> BaseResponse<T> success(T data, String message) {
-        return new BaseResponse<>(true, message, data, null);
+        return new BaseResponse<>(200, data, message, null);
     }
     
     // 실패 응답
     public static <T> BaseResponse<T> error(String message, String errorCode) {
-        return new BaseResponse<>(false, message, null, errorCode);
+        return new BaseResponse<>(401, null, message, errorCode);
     }
     
     // Getters
-    public boolean isSuccess() {
-        return success;
-    }
-    
-    public String getMessage() {
-        return message;
+    public int getCode() {
+        return code;
     }
     
     public T getData() {
         return data;
+    }
+    
+    public String getMessage() {
+        return message;
     }
     
     public String getErrorCode() {
