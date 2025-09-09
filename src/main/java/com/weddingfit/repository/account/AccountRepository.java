@@ -25,4 +25,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     
     // connectedId로 계좌 찾기
     Optional<Account> findByConnectedId(String connectedId);
+    
+    // 모든 연결된 계좌 조회
+    List<Account> findByConnectedIdIsNotNull();
 }

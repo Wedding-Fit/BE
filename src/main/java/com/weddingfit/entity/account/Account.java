@@ -17,7 +17,7 @@ public class Account {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; //
+    private User user;
 
     @Column(name = "bank_id", nullable = false)
     private String bankId; // (예: "0004")
@@ -55,7 +55,6 @@ public class Account {
         this.bankName = bankName;
         this.accountNumber = accountNumber;
         this.accountPassword = accountPassword;
-        this.balance = BigDecimal.ZERO;
     }
 
     // getters/setters

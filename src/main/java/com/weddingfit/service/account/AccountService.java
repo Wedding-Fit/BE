@@ -67,7 +67,7 @@ public class AccountService {
         Account account = new Account(
                 user,
                 request.getBankId(),
-                request.getBankPassword(), // TODO: 암호화 필요
+                request.getBankPassword(),
                 request.getBankName(),
                 request.getAccountNumber(),
                 request.getAccountPassword()
