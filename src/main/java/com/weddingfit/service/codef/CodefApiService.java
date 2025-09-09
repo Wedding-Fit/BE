@@ -1,5 +1,6 @@
 package com.weddingfit.service.codef;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.weddingfit.global.util.RsaEncryptUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,25 +96,30 @@ public class CodefApiService {
     /**
      * 거래내역 조회
      * @param connectedId 등록된 계좌의 connectedId
+     * @param accountNumber 실제 계좌번호
      * @param startDate 조회 시작일 (YYYYMMDD)
      * @param endDate 조회 종료일 (YYYYMMDD)
      * @return CodefTransactionResponse (거래내역 포함)
      */
-    public CodefTransactionResponse getTransactionHistory(String connectedId, String startDate, String endDate) {
+    public CodefTransactionResponse getTransactionHistory(String connectedId, String accountNumber, String startDate, String endDate) {
         // 1. 유효한 Access Token 조회 (자동 갱신 포함)
         String accessToken = codefAuthService.getValidAccessToken();
 
-        // 2. 요청 파라미터 설정
+        // 2. 요청 파라미터 설정 (CODEF 표준 형식)
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("connectedId", connectedId);
         requestBody.put("countryCode", "KR");
         requestBody.put("businessType", "BK");
         requestBody.put("clientType", "P");
-        requestBody.put("organization", "0004"); // 국민은행 (실제로는 동적으로 설정)
+        requestBody.put("organization", "0004"); // 국민은행
         requestBody.put("loginType", "1");
         requestBody.put("inquiryType", "0");
-        requestBody.put("commStartDate", startDate);
-        requestBody.put("commEndDate", endDate);
+        requestBody.put("startDate", startDate); // commStartDate 대신 startDate
+        requestBody.put("endDate", endDate); // commEndDate 대신 endDate
+        requestBody.put("orderBy", "0"); // 정렬 기준 추가
+        
+        // account 필드에 실제 계좌번호 전달 (CODEF 요구사항)
+        requestBody.put("account", accountNumber != null ? accountNumber : "");
 
         // 3. API 호출 - Codef는 URL 인코딩된 응답을 반환하므로 String으로 먼저 받음
         try {
@@ -148,6 +154,7 @@ public class CodefApiService {
     }
 
     // DTO 클래스들
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CodefConnectResponse {
         private Result result;
         private Data data;
@@ -163,6 +170,7 @@ public class CodefApiService {
         public String getConnectedId() { return connectedId; }
         public void setConnectedId(String connectedId) { this.connectedId = connectedId; }
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         public static class Result {
             private String code;
             private String message;
@@ -179,11 +187,24 @@ public class CodefApiService {
             public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
         }
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         public static class Data {
-            // 필요에 따라 추가
+            private String connectedId;
+            private Object[] successList;
+            private Object[] errorList;
+            
+            public String getConnectedId() { return connectedId; }
+            public void setConnectedId(String connectedId) { this.connectedId = connectedId; }
+            
+            public Object[] getSuccessList() { return successList; }
+            public void setSuccessList(Object[] successList) { this.successList = successList; }
+            
+            public Object[] getErrorList() { return errorList; }
+            public void setErrorList(Object[] errorList) { this.errorList = errorList; }
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CodefTransactionResponse {
         private Result result;
         private String clientType;
@@ -203,10 +224,12 @@ public class CodefApiService {
         public String getConnectedId() { return connectedId; }
         public void setConnectedId(String connectedId) { this.connectedId = connectedId; }
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         public static class Result {
             private String code;
             private String message;
             private String transactionId;
+            private String extraMessage;
 
             // Getters & Setters
             public String getCode() { return code; }
@@ -217,8 +240,12 @@ public class CodefApiService {
             
             public String getTransactionId() { return transactionId; }
             public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+            
+            public String getExtraMessage() { return extraMessage; }
+            public void setExtraMessage(String extraMessage) { this.extraMessage = extraMessage; }
         }
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         public static class TransactionData {
             private String resAccountBalance;
             private String resAccountDisplay;

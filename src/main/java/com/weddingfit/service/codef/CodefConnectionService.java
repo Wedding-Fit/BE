@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +21,7 @@ public class CodefConnectionService {
     
     private final CodefApiService codefApiService;
     private final AccountRepository accountRepository;
+    private final CodefTransactionService codefTransactionService;
     
     // 은행명 -> 은행코드 매핑
     private static final Map<String, String> BANK_CODE_MAP = new HashMap<>();
@@ -34,9 +37,11 @@ public class CodefConnectionService {
     }
     
     @Autowired
-    public CodefConnectionService(CodefApiService codefApiService, AccountRepository accountRepository) {
+    public CodefConnectionService(CodefApiService codefApiService, AccountRepository accountRepository, 
+                                 CodefTransactionService codefTransactionService) {
         this.codefApiService = codefApiService;
         this.accountRepository = accountRepository;
+        this.codefTransactionService = codefTransactionService;
     }
     
     /**
@@ -74,14 +79,25 @@ public class CodefConnectionService {
             
             // 4. 응답 확인 및 처리
             if (response != null && response.getResult() != null && "CF-00000".equals(response.getResult().getCode())) {
-                // 성공
-                account.setConnectedId(response.getConnectedId());
-                accountRepository.save(account);
-                
-                logger.info("codef 연동 성공: accountId={}, connectedId={}", accountId, response.getConnectedId());
-                
-                // 5. 초기 거래내역 동기화 (선택사항)
-                // syncInitialTransactions(account);
+                // 성공 - data 안의 connectedId 사용
+                String connectedId = response.getData() != null ? response.getData().getConnectedId() : null;
+                if (connectedId != null) {
+                    account.setConnectedId(connectedId);
+                    accountRepository.save(account);
+                    
+                    logger.info("codef 연동 성공: accountId={}, connectedId={}", accountId, connectedId);
+                    
+                    // 5. 트랜잭션 커밋 후에 거래내역 동기화 실행
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            logger.info("트랜잭션 커밋 완료, 거래내역 동기화 시작: accountId={}", accountId);
+                            codefTransactionService.syncAccountTransactions(accountId);
+                        }
+                    });
+                } else {
+                    logger.error("connectedId가 null입니다: accountId={}", accountId);
+                }
                 
             } else {
                 // 실패
