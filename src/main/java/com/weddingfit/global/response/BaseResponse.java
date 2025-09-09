@@ -31,6 +31,10 @@ public class BaseResponse<T> {
         return new BaseResponse<>(401, null, message, errorCode);
     }
     
+    public static <T> BaseResponse<T> error(int code, String message) {
+        return new BaseResponse<>(code, null, message, null);
+    }
+    
     // Getters
     public int getCode() {
         return code;
