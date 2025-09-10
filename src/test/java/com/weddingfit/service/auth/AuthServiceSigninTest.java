@@ -6,6 +6,7 @@ import com.weddingfit.entity.user.User;
 import com.weddingfit.global.exception.CustomException;
 import com.weddingfit.global.exception.GlobalErrorCode;
 import com.weddingfit.global.security.JwtProvider;
+import com.weddingfit.repository.couple.CoupleRepository;
 import com.weddingfit.repository.user.RefreshTokenRepository;
 import com.weddingfit.repository.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +40,9 @@ class AuthServiceSigninTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private CoupleRepository coupleRepository;
     
     @InjectMocks
     private AuthService authService;
@@ -66,6 +70,8 @@ class AuthServiceSigninTest {
                 .when(refreshTokenRepository).deleteByUserId(1L);
         given(jwtProvider.createAccessToken(1L, "그린티", null))
                 .willReturn("jwt-access-token");
+        given(coupleRepository.findByUserId(1L))
+                .willReturn(Optional.empty());
         
         // When
         SigninResponse response = authService.signin(request);
