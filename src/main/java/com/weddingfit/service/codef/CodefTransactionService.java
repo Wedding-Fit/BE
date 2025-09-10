@@ -59,11 +59,20 @@ public class CodefTransactionService {
     }
     
     /**
-     * 연결된 계좌의 거래내역을 동기화
+     * 연결된 계좌의 거래내역을 동기화 (기존 메서드 유지)
      */
     @Async
     @Transactional
     public void syncAccountTransactions(Long accountId) {
+        syncAccountTransactionsAndBalance(accountId);
+    }
+    
+    /**
+     * 연결된 계좌의 거래내역을 동기화하고 잔액 업데이트
+     */
+    @Async
+    @Transactional
+    public void syncAccountTransactionsAndBalance(Long accountId) {
         log.info("거래내역 동기화 시작: accountId={}", accountId);
         
         try {
@@ -107,10 +116,13 @@ public class CodefTransactionService {
                 return;
             }
             
-            // 3. 거래내역 파싱 및 저장
+            // 3. 계좌 잔액 업데이트
+            updateAccountBalance(account, response);
+            
+            // 4. 거래내역 파싱 및 저장
             List<Transaction> transactions = parseAndCreateTransactions(account, response);
             
-            // 4. 중복 체크 후 저장 (성능 최적화)
+            // 5. 중복 체크 후 저장 (성능 최적화)
             List<Transaction> existingTransactions = transactionRepository.findByAccount(account);
             List<Transaction> newTransactions = new ArrayList<>();
             
@@ -134,6 +146,30 @@ public class CodefTransactionService {
             
         } catch (Exception e) {
             log.error("거래내역 동기화 중 오류 발생: accountId={}", accountId, e);
+        }
+    }
+    
+    /**
+     * CODEF 응답에서 계좌 잔액을 추출하여 Account 엔티티 업데이트
+     */
+    private void updateAccountBalance(Account account, CodefApiService.CodefTransactionResponse response) {
+        try {
+            CodefApiService.CodefTransactionResponse.TransactionData data = response.getData();
+            if (data != null && data.getResAccountBalance() != null) {
+                String balanceStr = data.getResAccountBalance().replaceAll("[^0-9.-]", "");
+                if (!balanceStr.isEmpty()) {
+                    BigDecimal balance = new BigDecimal(balanceStr);
+                    account.setBalance(balance);
+                    accountRepository.save(account);
+                    
+                    log.info("계좌 잔액 업데이트 완료: accountId={}, balance={}", 
+                             account.getAccountId(), balance);
+                }
+            } else {
+                log.warn("CODEF 응답에 잔액 정보가 없습니다: accountId={}", account.getAccountId());
+            }
+        } catch (Exception e) {
+            log.error("계좌 잔액 업데이트 중 오류: accountId={}", account.getAccountId(), e);
         }
     }
     
@@ -352,7 +388,7 @@ public class CodefTransactionService {
         log.info("동기화 대상 계좌 수: {}", connectedAccounts.size());
         
         for (Account account : connectedAccounts) {
-            syncAccountTransactions(account.getAccountId());
+            syncAccountTransactionsAndBalance(account.getAccountId());
         }
     }
     

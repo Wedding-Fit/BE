@@ -102,12 +102,12 @@ public class CodefConnectionService {
                     
                     logger.info("codef 연동 성공: accountId={}, connectedId={}", accountId, connectedId);
                     
-                    // 5. 트랜잭션 커밋 후에 거래내역 동기화 실행
+                    // 5. 트랜잭션 커밋 후에 거래내역 동기화 및 잔액 업데이트 실행
                     TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
-                            logger.info("트랜잭션 커밋 완료, 거래내역 동기화 시작: accountId={}", accountId);
-                            codefTransactionService.syncAccountTransactions(accountId);
+                            logger.info("트랜잭션 커밋 완료, 거래내역 동기화 및 잔액 업데이트 시작: accountId={}", accountId);
+                            codefTransactionService.syncAccountTransactionsAndBalance(accountId);
                         }
                     });
                 } else {
