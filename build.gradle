@@ -44,6 +44,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// codef
+	implementation 'org.springframework.boot:spring-boot-starter-webflux' // HTTP 클라이언트 (codef API 호출용)
+	implementation 'com.fasterxml.jackson.core:jackson-databind' // JSON 처리
+	implementation 'org.springframework.boot:spring-boot-starter-quartz' // 스케줄링
+  
 	implementation 'com.openai:openai-java:3.5.0'
 	implementation 'org.json:json:20240303'
 }
