@@ -72,7 +72,7 @@ public class CommunityService {
 
         Map<Long, Long> likeMap = new HashMap<>();
         for (Community p : posts) {
-            long cnt = communityLikeRepository.countByCommunity_Id(p.getId());
+            long cnt = p.getLikeCount() != null ? p.getLikeCount().longValue() : 0L;
             likeMap.put(p.getId(), cnt);
         }
 
@@ -84,7 +84,7 @@ public class CommunityService {
         Community post = communityRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
-        long likeCount = communityLikeService.count(postId);
+        long likeCount = post.getLikeCount() != null ? post.getLikeCount().longValue() : 0L;
         Long likeId = communityLikeService.findMyLikeId(postId, currentUserId);
 
         String nickname = Optional.ofNullable(post.getUser())
@@ -161,6 +161,22 @@ public class CommunityService {
             case TIPS:    return "팁";
             case ETC:     return "기타";
             default:      return category.name();
+        }
+    }
+    
+    /**
+     * 모든 게시글의 likeCount를 실제 좋아요 수와 동기화
+     * (기존 데이터 마이그레이션용)
+     */
+    @Transactional
+    public void syncAllLikeCounts() {
+        List<Community> allPosts = communityRepository.findAll();
+        for (Community post : allPosts) {
+            long actualLikeCount = communityLikeRepository.countByCommunity_Id(post.getId());
+            if (post.getLikeCount() == null || post.getLikeCount() != actualLikeCount) {
+                post.setLikeCount((int) actualLikeCount);
+                communityRepository.save(post);
+            }
         }
     }
 }
