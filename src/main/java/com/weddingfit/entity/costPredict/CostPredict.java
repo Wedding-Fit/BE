@@ -50,11 +50,7 @@ public class CostPredict {
     @Column(name = "profile_snapshot", columnDefinition = "TEXT")
     private String profileSnapshot;
 
-    @Column(
-            name = "predicted_at",
-            insertable = false,
-            updatable = false,
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    )
+    @Column(name = "predicted_at")
+    @org.hibernate.annotations.CreationTimestamp
     private LocalDateTime predictedAt;
 }
