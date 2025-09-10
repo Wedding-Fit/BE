@@ -51,6 +51,7 @@ class CommunityServiceTest {
                 .content("테스트내용")
                 .category(Community.Category.WEDDING)
                 .user(user)
+                .likeCount(5)
                 .createdAt(LocalDateTime.of(2025, 9, 1, 10, 0))
                 .build();
     }
@@ -87,7 +88,6 @@ class CommunityServiceTest {
     @Test
     void 게시글_상세조회_좋아요포함() {
         when(communityRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(communityLikeService.count(postId)).thenReturn(5L);
         when(communityLikeService.findMyLikeId(postId, userId)).thenReturn(123L);
 
         PostdetailResponse detail = communityService.getPostDetail(postId, userId);
