@@ -214,10 +214,10 @@ public class CommunityController {
         return switch (korean.trim()) {
             case "결혼" -> Community.Category.WEDDING;
             case "저축" -> Community.Category.SAVING;
-            case "주거", "주택" -> Community.Category.HOUSING;
+            case "주거"-> Community.Category.HOUSING;
             case "세금" -> Community.Category.TAX;
-            case "중고" -> Community.Category.USED;
-            case "팁"   -> Community.Category.TIPS;
+            case "지출" -> Community.Category.USED;
+            case "조언"   -> Community.Category.TIPS;
             case "기타" -> Community.Category.ETC;
             default -> null;
         };
