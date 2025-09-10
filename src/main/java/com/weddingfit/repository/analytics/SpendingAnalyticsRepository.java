@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,5 +18,5 @@ public interface SpendingAnalyticsRepository extends JpaRepository<SpendingAnaly
     Optional<SpendingAnalytics> findLatestByUser(@Param("user") User user);
     
     @Query("SELECT sa FROM SpendingAnalytics sa WHERE sa.user = :user AND sa.analysisDate = :date")
-    Optional<SpendingAnalytics> findByUserAndDate(@Param("user") User user, @Param("date") LocalDate date);
+    List<SpendingAnalytics> findByUserAndDate(@Param("user") User user, @Param("date") LocalDate date);
 }

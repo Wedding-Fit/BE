@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -30,51 +31,76 @@ public class SpendingAnalyticsService {
         
         // 1. 오늘 날짜 기준으로 저장된 분석 데이터 조회
         LocalDate today = LocalDate.now();
-        SpendingAnalytics todayAnalytics = spendingAnalyticsRepository
-                .findByUserAndDate(user, today)
-                .orElse(null);
+        List<SpendingAnalytics> todayAnalyticsList = spendingAnalyticsRepository
+                .findByUserAndDate(user, today);
         
         // 2. 오늘 분석 데이터가 없거나 갱신이 필요한 경우 새로 계산
-        if (todayAnalytics == null) {
+        if (todayAnalyticsList.isEmpty()) {
             log.info("오늘 분석 데이터가 없음, 새로 계산: userId={}", userId);
-            todayAnalytics = writeService.calculateAndSaveAnalytics(user, today);
+            SpendingAnalytics todayAnalytics = writeService.calculateAndSaveAnalytics(user, today);
+            todayAnalyticsList = List.of(todayAnalytics);
         }
         
-        // 3. 응답 데이터 생성
+        // 3. 카테고리별 합계 계산
+        long totalCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getTotalCost).sum();
+        long foodCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getFoodCost).sum();
+        long foodAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getFoodAverage).findFirst().orElse(0);
+        long cultureCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getCultureCost).sum();
+        long cultureAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getCultureAverage).findFirst().orElse(0);
+        long medicalCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getMedicalCost).sum();
+        long medicalAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getMedicalAverage).findFirst().orElse(0);
+        long transportCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getTransportCost).sum();
+        long transportAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getTransportAverage).findFirst().orElse(0);
+        long shoppingCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getShoppingCost).sum();
+        long shoppingAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getShoppingAverage).findFirst().orElse(0);
+        long educationCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getEducationCost).sum();
+        long educationAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getEducationAverage).findFirst().orElse(0);
+        long communicationCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getCommunicationCost).sum();
+        long communicationAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getCommunicationAverage).findFirst().orElse(0);
+        long etcCost = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getEtcCost).sum();
+        long etcAverage = todayAnalyticsList.stream().mapToLong(SpendingAnalytics::getEtcAverage).findFirst().orElse(0);
+        
+        String aiMessage = todayAnalyticsList.stream()
+                .map(SpendingAnalytics::getAiMessage)
+                .filter(msg -> msg != null && !msg.isEmpty())
+                .findFirst()
+                .orElse("");
+        
+        // 4. 응답 데이터 생성
         return SpendingAnalyticsResponse.builder()
-                .totalCost(todayAnalytics.getTotalCost())
-                .aiMessage(todayAnalytics.getAiMessage())
+                .totalCost(totalCost)
+                .aiMessage(aiMessage)
                 .food(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getFoodCost())
-                        .average(todayAnalytics.getFoodAverage())
+                        .cost(foodCost)
+                        .average(foodAverage)
                         .build())
                 .culture(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getCultureCost())
-                        .average(todayAnalytics.getCultureAverage())
+                        .cost(cultureCost)
+                        .average(cultureAverage)
                         .build())
                 .medical(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getMedicalCost())
-                        .average(todayAnalytics.getMedicalAverage())
+                        .cost(medicalCost)
+                        .average(medicalAverage)
                         .build())
                 .transport(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getTransportCost())
-                        .average(todayAnalytics.getTransportAverage())
+                        .cost(transportCost)
+                        .average(transportAverage)
                         .build())
                 .shopping(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getShoppingCost())
-                        .average(todayAnalytics.getShoppingAverage())
+                        .cost(shoppingCost)
+                        .average(shoppingAverage)
                         .build())
                 .education(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getEducationCost())
-                        .average(todayAnalytics.getEducationAverage())
+                        .cost(educationCost)
+                        .average(educationAverage)
                         .build())
                 .communication(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getCommunicationCost())
-                        .average(todayAnalytics.getCommunicationAverage())
+                        .cost(communicationCost)
+                        .average(communicationAverage)
                         .build())
                 .etc(SpendingAnalyticsResponse.CategorySpending.builder()
-                        .cost(todayAnalytics.getEtcCost())
-                        .average(todayAnalytics.getEtcAverage())
+                        .cost(etcCost)
+                        .average(etcAverage)
                         .build())
                 .build();
     }
