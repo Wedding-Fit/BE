@@ -1,12 +1,17 @@
 spring:
   application:
     name: be
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      file-size-threshold: 0
 
   datasource:
-    url: jdbc:mysql://localhost:3306/weddingfit
+    url: jdbc:mysql://localhost:3306/weddingfit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: 003816
+    password: sung3724
 
   jpa:
     hibernate:
@@ -25,8 +30,55 @@ spring:
       allowed-headers: "*"
       allow-credentials: true
 
+codef:
+  base-url: https://development.codef.io
+  client-id: 61523f52-8040-4182-8c0c-ef8816a7a8b0
+  client-secret: 44e5dc6e-4a83-4ee7-ab8a-b9990af6ee06
+  public-key:
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmkQ75OcQrPR9tyQDXZXGT0bS7IRSwJLgtaOG+bOU3JP7tR9fxcQBJJaa+ovkJ/fwtkUXu9YbJGK3I2uVS7wHo1MZiY+1Eo6ZgbmSOnMbkSfapGkoDP8ivyD+dHisjgPhIeXRJNvw5OALt/8i90ztJ1ja+ch8EUi+sEDhsdfCdaTrqDrzxEpLJYDOOdCQ+MmNkFLAf2sP0nva7TmDRA+6ogYEU/zY6b6TdUmxlalIS6puWtjkjsK99hJ1jd7b2OO+iR9RulU/AzrCBdG+z3suVZtDUcZEyENp4RPlctGU6w17NFAehSR8I9I6iT7fvEDCIc6UfhKrmIe8HAcn1yRBDwIDAQAB
+    -----END PUBLIC KEY-----
+  timeout-ms: 8000
+
 server:
-  port: 8081
+  port: 8080
   error:
     whitelabel:
       enabled: false
+  tomcat:
+    max-http-header-size: 64KB
+    max-http-form-post-size: 10MB
+    max-swallow-size: 10MB
+
+jwt:
+  secret-key: +663kT73b39TUSLOYzS3/KmMs5Z6B4R6itPsCABjKqQ=
+  access-token-expire-time: 3600000
+  refresh-token-expire-time: 604800000
+
+  logging:
+    level:
+      com.weddingfit: DEBUG
+
+cloud:
+  aws:
+    s3:
+      bucket: wedding-fit
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: AKIAWHXPUBZWTNPJ3ALK
+      secretKey: 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
+
+openai:
+  api-key: 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
+  base-url: https://api.openai.com/v1
+
+external:
+  finlife:
+    base-url: https://finlife.fss.or.kr/finlifeapi
+    api-key: 6a24e0a6375b1c9ea359a0694ac948a7
+    endpoints:
+      deposit: /depositProductsSearch.json
+      saving: /savingProductsSearch.json
+      personalLoan: /creditLoanProductsSearch.json
+      jeonseLoan: /rentHouseLoanProductsSearch.json

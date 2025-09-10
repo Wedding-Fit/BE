@@ -22,4 +22,12 @@ public interface DepositSavingRepository extends JpaRepository<DepositSaving, Lo
 
    @Query("select ds from DepositSaving ds join fetch ds.company where ds.id = :id")
     Optional<DepositSaving> findByIdFetchCompany(@Param("id") Long id);
+
+    // 타입에 따라 이자율 내림차순 Top 5
+    List<DepositSaving> findTop5ByTypeOrderByInterestRateDesc(DepositSavingType type);
+    // 목표까지 남은 개월 수 이하인 상품 중 이자율 높은 순으로 정렬
+    List<DepositSaving> findTop20ByTypeOrderByInterestRateDesc(DepositSavingType type);
+
+    // 예금 상품 상위 10개 (금리순)
+    List<DepositSaving> findTop10ByTypeOrderByInterestRateDesc(DepositSavingType type);
 }
