@@ -17,7 +17,9 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -28,6 +30,33 @@ public class CodefTransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final ObjectMapper objectMapper;
+    
+    // 은행명 -> 은행코드 매핑 (CodefConnectionService와 동일)
+    private static final Map<String, String> BANK_CODE_MAP = new HashMap<>();
+    
+    static {
+        BANK_CODE_MAP.put("국민은행", "0004");
+        BANK_CODE_MAP.put("신한은행", "0088");
+        BANK_CODE_MAP.put("우리은행", "0020");
+        BANK_CODE_MAP.put("하나은행", "0081");
+        BANK_CODE_MAP.put("농협은행", "0011");
+        BANK_CODE_MAP.put("기업은행", "0003");
+        BANK_CODE_MAP.put("SC제일은행", "0023");
+        BANK_CODE_MAP.put("씨티은행", "0027");
+        BANK_CODE_MAP.put("대구은행", "0031");
+        BANK_CODE_MAP.put("부산은행", "0032");
+        BANK_CODE_MAP.put("광주은행", "0034");
+        BANK_CODE_MAP.put("제주은행", "0035");
+        BANK_CODE_MAP.put("전북은행", "0037");
+        BANK_CODE_MAP.put("경남은행", "0039");
+        BANK_CODE_MAP.put("새마을금고", "0045");
+        BANK_CODE_MAP.put("신협", "0048");
+        BANK_CODE_MAP.put("우체국", "0071");
+        BANK_CODE_MAP.put("KEB하나은행", "0081");
+        BANK_CODE_MAP.put("카카오뱅크", "0090");
+        BANK_CODE_MAP.put("케이뱅크", "0089");
+        BANK_CODE_MAP.put("토스뱅크", "0092");
+    }
     
     /**
      * 연결된 계좌의 거래내역을 동기화
@@ -51,10 +80,18 @@ public class CodefTransactionService {
             LocalDate endDate = LocalDate.now();
             LocalDate startDate = endDate.minusDays(30);
             
+            // 은행코드 매핑 (CodefConnectionService와 동일한 매핑 사용)
+            String bankCode = getBankCode(account.getBankName());
+            if (bankCode == null) {
+                log.error("지원하지 않는 은행입니다: {}", account.getBankName());
+                return;
+            }
+            
             CodefApiService.CodefTransactionResponse response = codefApiService
                     .getTransactionHistory(
                     account.getConnectedId(),
                     account.getAccountNumber(), // 실제 계좌번호 전달
+                    bankCode, // 은행코드 전달
                     startDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")),
                     endDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
             );
@@ -73,18 +110,24 @@ public class CodefTransactionService {
             // 3. 거래내역 파싱 및 저장
             List<Transaction> transactions = parseAndCreateTransactions(account, response);
             
-            // 4. 중복 체크 후 저장
-            int savedCount = 0;
+            // 4. 중복 체크 후 저장 (성능 최적화)
+            List<Transaction> existingTransactions = transactionRepository.findByAccount(account);
+            List<Transaction> newTransactions = new ArrayList<>();
+            
             for (Transaction transaction : transactions) {
-                // 중복 체크 (같은 계좌, 같은 날짜, 같은 금액, 같은 설명)
-                boolean exists = transactionRepository.findByAccount(account).stream()
+                boolean exists = existingTransactions.stream()
                         .anyMatch(t -> isSameTransaction(t, transaction));
                 
                 if (!exists) {
-                    transactionRepository.save(transaction);
-                    savedCount++;
+                    newTransactions.add(transaction);
                 }
             }
+            
+            if (!newTransactions.isEmpty()) {
+                transactionRepository.saveAll(newTransactions);
+            }
+            
+            int savedCount = newTransactions.size();
             
             log.info("거래내역 동기화 완료: accountId={}, 총 거래건수={}, 저장건수={}", 
                      accountId, transactions.size(), savedCount);
@@ -311,5 +354,12 @@ public class CodefTransactionService {
         for (Account account : connectedAccounts) {
             syncAccountTransactions(account.getAccountId());
         }
+    }
+    
+    /**
+     * 은행명으로 은행코드 조회
+     */
+    private String getBankCode(String bankName) {
+        return BANK_CODE_MAP.get(bankName);
     }
 }

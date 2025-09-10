@@ -1,6 +1,8 @@
 package com.weddingfit.service.codef;
 
 import com.weddingfit.entity.account.Account;
+import com.weddingfit.global.exception.AccountNotFoundException;
+import com.weddingfit.global.exception.UnsupportedBankException;
 import com.weddingfit.repository.account.AccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,21 @@ public class CodefConnectionService {
         BANK_CODE_MAP.put("하나은행", "0081");
         BANK_CODE_MAP.put("농협은행", "0011");
         BANK_CODE_MAP.put("기업은행", "0003");
-        // 필요에 따라 추가
+        BANK_CODE_MAP.put("SC제일은행", "0023");
+        BANK_CODE_MAP.put("씨티은행", "0027");
+        BANK_CODE_MAP.put("대구은행", "0031");
+        BANK_CODE_MAP.put("부산은행", "0032");
+        BANK_CODE_MAP.put("광주은행", "0034");
+        BANK_CODE_MAP.put("제주은행", "0035");
+        BANK_CODE_MAP.put("전북은행", "0037");
+        BANK_CODE_MAP.put("경남은행", "0039");
+        BANK_CODE_MAP.put("새마을금고", "0045");
+        BANK_CODE_MAP.put("신협", "0048");
+        BANK_CODE_MAP.put("우체국", "0071");
+        BANK_CODE_MAP.put("KEB하나은행", "0081");
+        BANK_CODE_MAP.put("카카오뱅크", "0090");
+        BANK_CODE_MAP.put("케이뱅크", "0089");
+        BANK_CODE_MAP.put("토스뱅크", "0092");
     }
     
     @Autowired
@@ -56,7 +72,7 @@ public class CodefConnectionService {
         try {
             // 1. 계좌 정보 조회
             Account account = accountRepository.findById(accountId)
-                    .orElseThrow(() -> new RuntimeException("계좌를 찾을 수 없습니다: " + accountId));
+                    .orElseThrow(() -> new AccountNotFoundException(accountId));
             
             if (account.isConnected()) {
                 logger.warn("이미 연결된 계좌입니다: accountId={}, connectedId={}", accountId, account.getConnectedId());
@@ -66,8 +82,7 @@ public class CodefConnectionService {
             // 2. 은행코드 매핑
             String bankCode = BANK_CODE_MAP.get(account.getBankName());
             if (bankCode == null) {
-                logger.error("지원하지 않는 은행입니다: {}", account.getBankName());
-                return;
+                throw new UnsupportedBankException(account.getBankName());
             }
             
             // 3. codef API 호출하여 connectId 발급
