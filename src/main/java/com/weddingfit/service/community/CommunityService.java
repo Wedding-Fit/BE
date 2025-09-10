@@ -136,10 +136,10 @@ public class CommunityService {
         switch (s) {
             case "결혼": return Community.Category.WEDDING;
             case "저축": return Community.Category.SAVING;
-            case "주택": return Community.Category.HOUSING;
+            case "주거": return Community.Category.HOUSING;
             case "세금": return Community.Category.TAX;
-            case "중고": return Community.Category.USED;
-            case "팁":   return Community.Category.TIPS;
+            case "지출": return Community.Category.USED;
+            case "조언":   return Community.Category.TIPS;
             case "기타": return Community.Category.ETC;
             default:
                 try {
