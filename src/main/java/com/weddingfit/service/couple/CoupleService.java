@@ -11,9 +11,12 @@ import com.weddingfit.global.exception.CustomException;
 import com.weddingfit.global.exception.GlobalErrorCode;
 import com.weddingfit.repository.couple.CoupleRepository;
 import com.weddingfit.repository.user.UserRepository;
+import com.weddingfit.repository.account.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CoupleService {
     private final CoupleRepository coupleRepository;
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
     
     @Transactional
     public CoupleRegisterResponse registerCouple(CoupleRegisterRequest request, Long currentUserId) {
@@ -144,5 +148,47 @@ public class CoupleService {
                 .maleName(maleName)
                 .weddingDate(couple.getWeddingDate())
                 .build();
+    }
+    
+    /**
+     * 커플의 총 자산을 계산하고 업데이트
+     * @param coupleId 커플 ID
+     */
+    @Transactional
+    public void updateCoupleTotalAmount(Long coupleId) {
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.COUPLE_NOT_FOUND));
+        
+        // 두 사용자의 모든 계좌 잔액 합계 계산
+        BigDecimal user1TotalBalance = accountRepository.findByUser(couple.getUser1())
+                .stream()
+                .map(account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal user2TotalBalance = accountRepository.findByUser(couple.getUser2())
+                .stream()
+                .map(account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        BigDecimal totalAmount = user1TotalBalance.add(user2TotalBalance);
+        
+        // 커플 총 자산 업데이트
+        couple.updateTotalAmount(totalAmount);
+        coupleRepository.save(couple);
+    }
+    
+    /**
+     * 모든 커플의 총 자산을 일괄 업데이트
+     */
+    @Transactional
+    public void updateAllCouplesTotalAmount() {
+        coupleRepository.findAll().forEach(couple -> {
+            try {
+                updateCoupleTotalAmount(couple.getId());
+            } catch (Exception e) {
+                // 개별 커플 업데이트 실패 시 로그만 남기고 계속 진행
+                System.err.println("커플 총 자산 업데이트 실패: coupleId=" + couple.getId() + ", error=" + e.getMessage());
+            }
+        });
     }
 }

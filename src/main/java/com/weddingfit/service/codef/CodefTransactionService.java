@@ -6,6 +6,8 @@ import com.weddingfit.entity.account.Account;
 import com.weddingfit.entity.transaction.Transaction;
 import com.weddingfit.repository.account.AccountRepository;
 import com.weddingfit.repository.transaction.TransactionRepository;
+import com.weddingfit.repository.couple.CoupleRepository;
+import com.weddingfit.service.couple.CoupleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -30,6 +32,8 @@ public class CodefTransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final ObjectMapper objectMapper;
+    private final CoupleRepository coupleRepository;
+    private final CoupleService coupleService;
     
     // 은행명 -> 은행코드 매핑 (CodefConnectionService와 동일)
     private static final Map<String, String> BANK_CODE_MAP = new HashMap<>();
@@ -164,6 +168,9 @@ public class CodefTransactionService {
                     
                     log.info("계좌 잔액 업데이트 완료: accountId={}, balance={}", 
                              account.getAccountId(), balance);
+                    
+                    // 커플 총 자산 업데이트
+                    updateCoupleTotalAmount(account);
                 }
             } else {
                 log.warn("CODEF 응답에 잔액 정보가 없습니다: accountId={}", account.getAccountId());
@@ -397,5 +404,26 @@ public class CodefTransactionService {
      */
     private String getBankCode(String bankName) {
         return BANK_CODE_MAP.get(bankName);
+    }
+    
+    /**
+     * 계좌 업데이트 후 해당 사용자가 속한 커플의 총 자산 업데이트
+     */
+    private void updateCoupleTotalAmount(Account account) {
+        try {
+            coupleRepository.findByUserId(account.getUser().getId())
+                    .ifPresent(couple -> {
+                        try {
+                            coupleService.updateCoupleTotalAmount(couple.getId());
+                            log.info("커플 총 자산 업데이트 완료: coupleId={}", couple.getId());
+                        } catch (Exception e) {
+                            log.error("커플 총 자산 업데이트 실패: coupleId={}, error={}", 
+                                     couple.getId(), e.getMessage());
+                        }
+                    });
+        } catch (Exception e) {
+            log.error("커플 조회 및 총 자산 업데이트 중 오류: userId={}, error={}", 
+                     account.getUser().getId(), e.getMessage());
+        }
     }
 }
