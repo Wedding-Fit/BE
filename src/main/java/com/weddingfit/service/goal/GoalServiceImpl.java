@@ -1,15 +1,15 @@
 package com.weddingfit.service.goal;
 
 import com.weddingfit.dto.request.goal.GoalCreateRequest;
+import com.weddingfit.dto.request.goal.GoalCurrentAmountUpdateRequest;
 import com.weddingfit.dto.request.goal.GoalSaveProductRequest;
 import com.weddingfit.dto.response.goal.*;
-import com.weddingfit.entity.deposit.DepositSavingType;
 import com.weddingfit.entity.goal.Goal;
 import com.weddingfit.entity.deposit.DepositSaving;
-import com.weddingfit.entity.company.FinancialCompany;
 import com.weddingfit.repository.goal.GoalRepository;
 import com.weddingfit.repository.deposit.DepositSavingRepository;
 import com.weddingfit.repository.company.FinancialCompanyRepository;
+import com.weddingfit.service.notification.GoalNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final DepositSavingRepository depositSavingRepository;
     private final FinancialCompanyRepository financialCompanyRepository;
+    private final GoalNotificationService goalNotificationService;
 
     @Override
     @Transactional
@@ -228,6 +229,19 @@ public class GoalServiceImpl implements GoalService {
         goal.setEstimatedAmount(request.getEstimatedAmount());     // ⬅️ 예상 달성금 저장
 
         goalRepository.save(goal);
+    }
+
+    @Override
+    @Transactional
+    public void updateCurrentAmount(Long goalId, GoalCurrentAmountUpdateRequest request) {
+        Goal goal = goalRepository.findById(goalId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 목표를 찾을 수 없습니다."));
+
+        goal.setCurrentAmount(request.getCurrentAmount());
+        goalRepository.save(goal);
+
+        // FCM 알림 체크 및 발송
+        goalNotificationService.checkAndSendProgressNotification(goalId);
     }
 
     @Override

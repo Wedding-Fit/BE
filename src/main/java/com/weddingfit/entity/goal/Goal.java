@@ -58,6 +58,18 @@ public class Goal {
     @Column(precision = 15, scale = 2)
     private BigDecimal estimatedAmount;
 
+    @Column(name = "notified_30", nullable = false)
+    @Builder.Default
+    private Boolean notified30 = false;
+
+    @Column(name = "notified_60", nullable = false)
+    @Builder.Default
+    private Boolean notified60 = false;
+
+    @Column(name = "notified_100", nullable = false)
+    @Builder.Default
+    private Boolean notified100 = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "goal_status", nullable = false, length = 20)
     @Builder.Default

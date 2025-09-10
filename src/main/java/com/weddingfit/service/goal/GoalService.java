@@ -1,6 +1,7 @@
 package com.weddingfit.service.goal;
 
 import com.weddingfit.dto.request.goal.GoalCreateRequest;
+import com.weddingfit.dto.request.goal.GoalCurrentAmountUpdateRequest;
 import com.weddingfit.dto.request.goal.GoalSaveProductRequest;
 import com.weddingfit.dto.response.goal.GoalCreatedResponse;
 import com.weddingfit.dto.response.goal.GoalDetailResponse;
@@ -13,5 +14,6 @@ public interface GoalService {
     List<GoalListResponse> getGoalsByCoupleId(Long coupleId);
     GoalDetailResponse getGoalDetail(Long goalId);
     void saveGoalProduct(Long goalId, GoalSaveProductRequest request);
+    void updateCurrentAmount(Long goalId, GoalCurrentAmountUpdateRequest request);
     void deleteGoal(Long goalId);
 }
