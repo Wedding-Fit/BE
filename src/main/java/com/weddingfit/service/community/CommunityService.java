@@ -155,19 +155,15 @@ public class CommunityService {
         switch (category) {
             case WEDDING: return "결혼";
             case SAVING:  return "저축";
-            case HOUSING: return "주택";
+            case HOUSING: return "주거";
             case TAX:     return "세금";
-            case USED:    return "중고";
-            case TIPS:    return "팁";
+            case USED:    return "지출";
+            case TIPS:    return "조언";
             case ETC:     return "기타";
             default:      return category.name();
         }
     }
-    
-    /**
-     * 모든 게시글의 likeCount를 실제 좋아요 수와 동기화
-     * (기존 데이터 마이그레이션용)
-     */
+
     @Transactional
     public void syncAllLikeCounts() {
         List<Community> allPosts = communityRepository.findAll();
