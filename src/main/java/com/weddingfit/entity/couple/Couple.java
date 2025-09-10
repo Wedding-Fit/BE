@@ -66,4 +66,9 @@ public class Couple {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+    
+    // 커플 총 자산 업데이트
+    public void updateTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 }

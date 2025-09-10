@@ -14,6 +14,7 @@ import com.weddingfit.global.exception.GlobalErrorCode;
 import com.weddingfit.global.security.JwtProvider;
 import com.weddingfit.repository.user.RefreshTokenRepository;
 import com.weddingfit.repository.user.UserRepository;
+import com.weddingfit.repository.couple.CoupleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +34,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final CoupleRepository coupleRepository;
 
     @Transactional
     public SignupResponse signup(SignupRequest request){
@@ -100,12 +102,17 @@ public class AuthService {
                 .build();
         refreshTokenRepository.save(refreshTokenEntity);
         
+        // 사용자가 속한 커플 ID 조회
+        Long coupleId = coupleRepository.findByUserId(user.getId())
+                .map(couple -> couple.getId())
+                .orElse(null);
+        
         return SigninResponse.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .coupleId(null)
+                .coupleId(coupleId)
                 .build();
     }
     

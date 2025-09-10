@@ -49,6 +49,10 @@ public class CommunityLikeService {
                 .user(user)
                 .build();
         communityLikeRepository.save(like);
+        
+        // 게시글의 좋아요 수 증가
+        post.setLikeCount(post.getLikeCount() + 1);
+        communityRepository.save(post);
     }
 
     @Transactional
@@ -57,6 +61,13 @@ public class CommunityLikeService {
 
         CommunityLike like = communityLikeRepository.findByCommunity_IdAndUser_Id(postId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("좋아요 내역이 없습니다."));
+        
+        Community post = like.getCommunity();
         communityLikeRepository.delete(like);
+        
+        // 게시글의 좋아요 수 감소
+        int currentLikeCount = post.getLikeCount() != null ? post.getLikeCount() : 0;
+        post.setLikeCount(Math.max(0, currentLikeCount - 1));
+        communityRepository.save(post);
     }
 }
