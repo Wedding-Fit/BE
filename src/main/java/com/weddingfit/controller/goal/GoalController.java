@@ -1,6 +1,7 @@
 package com.weddingfit.controller.goal;
 
 import com.weddingfit.dto.request.goal.GoalCreateRequest;
+import com.weddingfit.dto.request.goal.GoalCurrentAmountUpdateRequest;
 import com.weddingfit.dto.request.goal.GoalSaveProductRequest;
 import com.weddingfit.dto.response.goal.GoalCreatedResponse;
 import com.weddingfit.dto.response.goal.GoalDetailResponse;
@@ -63,6 +64,19 @@ public class GoalController {
     ) {
         goalService.saveGoalProduct(goalId, request);
         return BaseResponse.success("금융 상품이 저장되었습니다.");
+    }
+
+    /**
+     * 목표 현재 금액 업데이트 (FCM 알림 트리거)
+     */
+    @PutMapping("/update-amount/{goalId}")
+    @Operation(summary = "목표 현재 금액 업데이트 및 FCM 알림 발송")
+    public BaseResponse<String> updateCurrentAmount(
+            @PathVariable Long goalId,
+            @RequestBody GoalCurrentAmountUpdateRequest request
+    ) {
+        goalService.updateCurrentAmount(goalId, request);
+        return BaseResponse.success("목표 금액이 업데이트되었습니다.");
     }
 
     /**

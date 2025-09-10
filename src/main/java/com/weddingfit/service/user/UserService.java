@@ -24,6 +24,12 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND));
     }
     
+    @Transactional(readOnly = true)
+    public User findByLoginId(String loginId) {
+        return userRepository.findByLoginIdAndIsActiveTrue(loginId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND));
+    }
+    
     @Transactional
     public void deleteUser(Long userId) {
         // 사용자 존재 확인
